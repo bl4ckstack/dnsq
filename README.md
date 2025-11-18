@@ -1,22 +1,23 @@
 # dnsq
 
-[![Perl](https://img.shields.io/badge/Perl-5.10%2B-blue)](https://www.perl.org/)  
-[![License](https://img.shields.io/badge/License-MIT-green)](LICENSE)  
-[![Version](https://img.shields.io/badge/Version-1.0.0-orange)](bin/dnsq)
+[![Perl](https://img.shields.io/badge/Perl-5.10%2B-39457E?style=flat&logo=perl)](https://www.perl.org/)
+[![License](https://img.shields.io/badge/License-MIT-00A98F?style=flat)](LICENSE)
+[![Version](https://img.shields.io/badge/Version-1.0.0-FF6B6B?style=flat)](bin/dnsq)
+[![DNS](https://img.shields.io/badge/DNS-Query%20Tool-4A90E2?style=flat&logo=cloudflare)](bin/dnsq)
+[![Platform](https://img.shields.io/badge/Platform-Linux%20%7C%20macOS%20%7C%20BSD-lightgrey?style=flat)](bin/dnsq)
+[![PRs Welcome](https://img.shields.io/badge/PRs-Welcome-brightgreen?style=flat)](https://github.com)
 
+> A powerful dig-like DNS query tool with JSON output, trace mode, and batch processing — all in pure Perl.
 
-A full-featured dig-like DNS query tool written in Perl with JSON output, TCP/UDP support, trace mode, and batch processing.
+## ✨ Features
 
-## Features
-
-- **Multiple Output Formats**: Full dig-like, short (answers only), or JSON
-- **Protocol Support**: TCP and UDP
-- **Custom DNS Server**: Query any DNS server with custom port
-- **Timeout & Retries**: Configurable timeout and retry settings
-- **Batch Mode**: Process multiple queries from a file
-- **Trace Mode**: Follow DNS delegation path from root servers
-- **Interactive Mode**: Interactive shell for multiple queries
-- **DNSSEC Support**: Request and display DNSSEC records
+🔍 **Multiple Formats** • Full dig-like, short, or JSON output  
+🌐 **Protocol Agnostic** • TCP and UDP support  
+⚡ **Flexible Queries** • Custom DNS servers, ports, timeouts, and retries  
+📋 **Batch Processing** • Query multiple domains from files  
+🔐 **DNSSEC Ready** • Request and display DNSSEC records  
+🚀 **Trace Mode** • Follow DNS delegation from root servers  
+💬 **Interactive Shell** • Built-in REPL for exploration
 
 ## Installation
 

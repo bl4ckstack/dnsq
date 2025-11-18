@@ -99,26 +99,3 @@ dnsq> set server 8.8.8.8
 dnsq> quit
 ```
 
-## Project Structure
-
-```
-.
-├── bin/
-│   └── dnsq              # Main executable
-├── lib/
-│   └── DNSQuery/
-│       ├── Resolver.pm   # DNS resolution logic
-│       ├── Output.pm     # Output formatting
-│       ├── Batch.pm      # Batch processing
-│       └── Interactive.pm # Interactive mode
-├── t/
-│   └── basic.t           # Tests
-├── examples/
-│   └── queries.txt       # Sample batch file
-├── cpanfile              # Dependencies
-└── README.md
-```
-
-## License
-
-MIT

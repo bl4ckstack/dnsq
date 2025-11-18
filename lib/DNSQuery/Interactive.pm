@@ -2,6 +2,7 @@ package DNSQuery::Interactive;
 use strict;
 use warnings;
 use Term::ReadLine;
+use DNSQuery::Resolver;
 
 our $VERSION = '1.0.0';
 
@@ -49,12 +50,51 @@ sub run {
 sub set_config {
     my ($self, $key, $value) = @_;
     
-    if (exists $self->{config}{$key}) {
-        $self->{config}{$key} = $value;
-        print "Set $key = $value\n";
-    } else {
+    unless (exists $self->{config}{$key}) {
         print "Unknown setting: $key\n";
+        return;
     }
+    
+    # Validate specific settings
+    if ($key eq 'port') {
+        unless ($value =~ /^\d+$/ && $value >= 1 && $value <= 65535) {
+            print "Error: Port must be between 1 and 65535\n";
+            return;
+        }
+    } elsif ($key eq 'timeout') {
+        unless ($value =~ /^\d+$/ && $value >= 1) {
+            print "Error: Timeout must be a positive integer\n";
+            return;
+        }
+    } elsif ($key eq 'retries') {
+        unless ($value =~ /^\d+$/ && $value >= 0) {
+            print "Error: Retries must be a non-negative integer\n";
+            return;
+        }
+    } elsif ($key eq 'protocol') {
+        unless ($value =~ /^(tcp|udp)$/i) {
+            print "Error: Protocol must be 'tcp' or 'udp'\n";
+            return;
+        }
+        $value = lc($value);
+    }
+    
+    my $old_value = $self->{config}{$key};
+    $self->{config}{$key} = $value;
+    
+    # Recreate resolver if network settings changed
+    if ($key =~ /^(server|port|timeout|retries|protocol)$/) {
+        eval {
+            $self->{resolver} = DNSQuery::Resolver->new($self->{config});
+        };
+        if ($@) {
+            print "Error updating resolver: $@\n";
+            $self->{config}{$key} = $old_value;  # Rollback
+            return;
+        }
+    }
+    
+    print "Set $key = $value\n";
 }
 
 sub show_config {
@@ -71,11 +111,27 @@ sub show_config {
 sub process_query {
     my ($self, $input) = @_;
     
-    my ($domain, $type) = split(/\s+/, $input);
-    return unless $domain;
+    my ($domain, $type) = split(/\s+/, $input, 2);
+    
+    unless ($domain) {
+        print "Error: Domain name required\n";
+        return;
+    }
+    
+    # Validate domain format
+    unless ($domain =~ /^([a-zA-Z0-9]([a-zA-Z0-9\-]{0,61}[a-zA-Z0-9])?\.)*[a-zA-Z0-9]([a-zA-Z0-9\-]{0,61}[a-zA-Z0-9])?$/) {
+        print "Error: Invalid domain name format: $domain\n";
+        return;
+    }
     
     $type = uc($type) if $type;
-    my $result = $self->{resolver}->query($domain, $type);
+    
+    my $result = eval { $self->{resolver}->query($domain, $type) };
+    
+    if ($@) {
+        print STDERR "Query error: $@\n";
+        return;
+    }
     
     if ($result->{error}) {
         print STDERR "Query failed: $result->{error}\n";

@@ -13,14 +13,25 @@ sub new {
 sub print_result {
     my ($self, $result, $domain) = @_;
     
+    unless ($result && ref($result) eq 'HASH') {
+        warn "Invalid result object\n";
+        return;
+    }
+    
     return unless $result->{packet};
     
-    if ($self->{config}{json}) {
-        $self->print_json($result, $domain);
-    } elsif ($self->{config}{short}) {
-        $self->print_short($result->{packet});
-    } else {
-        $self->print_full($result, $domain);
+    eval {
+        if ($self->{config}{json}) {
+            $self->print_json($result, $domain);
+        } elsif ($self->{config}{short}) {
+            $self->print_short($result->{packet});
+        } else {
+            $self->print_full($result, $domain);
+        }
+    };
+    
+    if ($@) {
+        warn "Error printing result: $@\n";
     }
 }
 
@@ -87,22 +98,34 @@ sub print_full {
 sub print_short {
     my ($self, $packet) = @_;
     
-    foreach my $rr ($packet->answer) {
-        if ($rr->can('address')) {
-            print $rr->address . "\n";
-        } elsif ($rr->can('cname')) {
-            print $rr->cname . "\n";
-        } elsif ($rr->can('exchange')) {
-            print $rr->exchange . "\n";
-        } elsif ($rr->can('nsdname')) {
-            print $rr->nsdname . "\n";
-        } elsif ($rr->can('ptrdname')) {
-            print $rr->ptrdname . "\n";
-        } elsif ($rr->can('txtdata')) {
-            print $rr->txtdata . "\n";
-        } else {
-            print $rr->rdstring . "\n";
-        }
+    return unless $packet;
+    
+    my @answers = eval { $packet->answer };
+    return if $@;
+    
+    foreach my $rr (@answers) {
+        next unless $rr;
+        
+        my $output = eval {
+            if ($rr->can('address')) {
+                return $rr->address;
+            } elsif ($rr->can('cname')) {
+                return $rr->cname;
+            } elsif ($rr->can('exchange')) {
+                return $rr->exchange;
+            } elsif ($rr->can('nsdname')) {
+                return $rr->nsdname;
+            } elsif ($rr->can('ptrdname')) {
+                return $rr->ptrdname;
+            } elsif ($rr->can('txtdata')) {
+                return $rr->txtdata;
+            } elsif ($rr->can('rdstring')) {
+                return $rr->rdstring;
+            }
+            return undef;
+        };
+        
+        print "$output\n" if defined $output && !$@;
     }
 }
 
@@ -153,6 +176,7 @@ sub print_json {
     }
     
     foreach my $rr ($packet->additional) {
+        next if $rr->type eq 'OPT';  # Skip EDNS pseudo-records
         push @{$output{additional}}, $self->parse_rr($rr);
     }
     
@@ -162,42 +186,51 @@ sub print_json {
 sub parse_rr {
     my ($self, $rr) = @_;
     
-    my %record = (
-        name => $rr->name,
-        type => $rr->type,
-        class => $rr->class,
-        ttl => $rr->ttl,
-    );
+    return {} unless $rr;
     
-    if ($rr->can('address')) {
-        $record{address} = $rr->address;
-    } elsif ($rr->can('cname')) {
-        $record{cname} = $rr->cname;
-    } elsif ($rr->can('exchange')) {
-        $record{exchange} = $rr->exchange;
-        $record{preference} = $rr->preference if $rr->can('preference');
-    } elsif ($rr->can('nsdname')) {
-        $record{nsdname} = $rr->nsdname;
-    } elsif ($rr->can('ptrdname')) {
-        $record{ptrdname} = $rr->ptrdname;
-    } elsif ($rr->can('mname')) {
-        $record{mname} = $rr->mname;
-        $record{rname} = $rr->rname;
-        $record{serial} = $rr->serial;
-        $record{refresh} = $rr->refresh;
-        $record{retry} = $rr->retry;
-        $record{expire} = $rr->expire;
-        $record{minimum} = $rr->minimum;
-    } elsif ($rr->can('txtdata')) {
-        $record{txtdata} = $rr->txtdata;
-    } elsif ($rr->can('target')) {
-        $record{target} = $rr->target;
-        $record{priority} = $rr->priority if $rr->can('priority');
-        $record{weight} = $rr->weight if $rr->can('weight');
-        $record{port} = $rr->port if $rr->can('port');
-    } else {
-        $record{rdata} = $rr->rdstring;
-    }
+    my %record = eval {
+        (
+            name => $rr->name,
+            type => $rr->type,
+            class => $rr->class,
+            ttl => $rr->ttl,
+        )
+    };
+    
+    return \%record if $@;
+    
+    # Safely extract record-specific data
+    eval {
+        if ($rr->can('address')) {
+            $record{address} = $rr->address;
+        } elsif ($rr->can('cname')) {
+            $record{cname} = $rr->cname;
+        } elsif ($rr->can('exchange')) {
+            $record{exchange} = $rr->exchange;
+            $record{preference} = $rr->preference if $rr->can('preference');
+        } elsif ($rr->can('nsdname')) {
+            $record{nsdname} = $rr->nsdname;
+        } elsif ($rr->can('ptrdname')) {
+            $record{ptrdname} = $rr->ptrdname;
+        } elsif ($rr->can('mname')) {
+            $record{mname} = $rr->mname;
+            $record{rname} = $rr->rname if $rr->can('rname');
+            $record{serial} = $rr->serial if $rr->can('serial');
+            $record{refresh} = $rr->refresh if $rr->can('refresh');
+            $record{retry} = $rr->retry if $rr->can('retry');
+            $record{expire} = $rr->expire if $rr->can('expire');
+            $record{minimum} = $rr->minimum if $rr->can('minimum');
+        } elsif ($rr->can('txtdata')) {
+            $record{txtdata} = $rr->txtdata;
+        } elsif ($rr->can('target')) {
+            $record{target} = $rr->target;
+            $record{priority} = $rr->priority if $rr->can('priority');
+            $record{weight} = $rr->weight if $rr->can('weight');
+            $record{port} = $rr->port if $rr->can('port');
+        } elsif ($rr->can('rdstring')) {
+            $record{rdata} = $rr->rdstring;
+        }
+    };
     
     return \%record;
 }

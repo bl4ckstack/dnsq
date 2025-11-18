@@ -51,7 +51,22 @@ GetOptions(
     'version|V'       => sub { print "dnsq version $VERSION\n"; exit 0; },
 ) or die "Error parsing options. Use --help for usage.\n";
 
-my $resolver = DNSQuery::Resolver->new(\%config);
+# Validate configuration before creating objects
+if ($config{port} < 1 || $config{port} > 65535) {
+    die "Error: Port must be between 1 and 65535\n";
+}
+if ($config{timeout} < 1) {
+    die "Error: Timeout must be at least 1 second\n";
+}
+if ($config{retries} < 0) {
+    die "Error: Retries must be non-negative\n";
+}
+
+my $resolver = eval { DNSQuery::Resolver->new(\%config) };
+if ($@) {
+    die "Error initializing resolver: $@";
+}
+
 my $output = DNSQuery::Output->new(\%config);
 
 if ($config{interactive}) {
@@ -73,7 +88,26 @@ if ($config{interactive}) {
     my $qtype = shift @ARGV || $config{qtype};
     $config{qtype} = uc($qtype);
     
-    my $result = $resolver->query($domain);
+    # Validate domain
+    unless ($domain =~ /^([a-zA-Z0-9]([a-zA-Z0-9\-]{0,61}[a-zA-Z0-9])?\.)*[a-zA-Z0-9]([a-zA-Z0-9\-]{0,61}[a-zA-Z0-9])?$/) {
+        die "Error: Invalid domain name: $domain\n";
+    }
+    
+    my $result = eval { $resolver->query($domain) };
+    
+    if ($@) {
+        if ($config{json}) {
+            require JSON;
+            print JSON::encode_json({
+                error => "Query exception: $@",
+                domain => $domain,
+                type => $config{qtype},
+            }) . "\n";
+        } else {
+            print STDERR "Query exception: $@\n";
+        }
+        exit 1;
+    }
     
     if ($result->{error}) {
         if ($config{json}) {

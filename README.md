@@ -1,10 +1,9 @@
 # dnsq
 
-[![Perl](https://img.shields.io/badge/Perl-5.10%2B-blue?logo=perl&logoColor=white&style=for-the-badge)](https://www.perl.org/)  
-[![License](https://img.shields.io/badge/License-MIT-green?style=for-the-badge&logo=open-source-initiative)](LICENSE)  
-[![Version](https://img.shields.io/badge/Version-1.0.0-orange?style=for-the-badge&logo=git&logoColor=white)](bin/dnsq)  
-[![Build](https://img.shields.io/badge/Build-Passing-brightgreen?style=for-the-badge&logo=github-actions)](#)  
-[![Stars](https://img.shields.io/badge/Stars-⭐️-yellow?style=for-the-badge)](#)
+[![Perl](https://img.shields.io/badge/Perl-5.10%2B-blue)](https://www.perl.org/)  
+[![License](https://img.shields.io/badge/License-MIT-green)](LICENSE)  
+[![Version](https://img.shields.io/badge/Version-1.0.0-orange)](bin/dnsq)
+
 
 A full-featured dig-like DNS query tool written in Perl with JSON output, TCP/UDP support, trace mode, and batch processing.
 

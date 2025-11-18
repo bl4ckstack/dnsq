@@ -9,15 +9,15 @@
 
 > A powerful dig-like DNS query tool with JSON output, trace mode, and batch processing — all in pure Perl.
 
-## ✨ Features
+## Features
 
-🔍 **Multiple Formats** • Full dig-like, short, or JSON output  
-🌐 **Protocol Agnostic** • TCP and UDP support  
-⚡ **Flexible Queries** • Custom DNS servers, ports, timeouts, and retries  
-📋 **Batch Processing** • Query multiple domains from files  
-🔐 **DNSSEC Ready** • Request and display DNSSEC records  
-🚀 **Trace Mode** • Follow DNS delegation from root servers  
-💬 **Interactive Shell** • Built-in REPL for exploration
+ **Multiple Formats** • Full dig-like, short, or JSON output  
+ **Protocol Agnostic** • TCP and UDP support  
+ **Flexible Queries** • Custom DNS servers, ports, timeouts, and retries  
+ **Batch Processing** • Query multiple domains from files  
+ **DNSSEC Ready** • Request and display DNSSEC records  
+ **Trace Mode** • Follow DNS delegation from root servers  
+ **Interactive Shell** • Built-in REPL for exploration
 
 ## Installation
 

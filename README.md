@@ -57,7 +57,7 @@ bin/dnsq --tcp google.com
 bin/dnsq --trace example.com
 
 # Batch mode
-bin/dnsq --batch examples/queries.txt
+bin/dnsq --batch example/queries.txt
 
 # Interactive mode
 bin/dnsq --interactive
